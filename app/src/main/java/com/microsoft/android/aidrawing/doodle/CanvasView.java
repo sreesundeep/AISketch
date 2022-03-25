@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
@@ -21,8 +22,10 @@ public class CanvasView extends SurfaceView implements Callback {
   private Bitmap bitmap;
   private Canvas canvas;
   private float scale;
-  final int VIEW_WIDTH = 28;
-  final int VIEW_HEIGHT = 28;
+  final float scaleP = getContext().getResources().getDisplayMetrics().density;
+  int pixels = (int) (500 * scaleP + 0.5f);
+  final int VIEW_WIDTH = pixels;
+  final int VIEW_HEIGHT = pixels;
 
   public CanvasView(Context context) {
     super(context);
@@ -32,6 +35,41 @@ public class CanvasView extends SurfaceView implements Callback {
   public CanvasView(Context context, AttributeSet attrs) {
     super(context, attrs);
     initialize();
+  }
+
+  public CanvasView(Context context, int width, Bitmap localBitmap) {
+    super(context);
+    float scaleX = getWidth() / width;
+    float scaleY = getHeight() / width;
+
+    scale = Math.min(scaleX, scaleY);
+    bitmap = getResizedBitmap(localBitmap, width, width);
+    canvas = new Canvas(bitmap);
+  }
+
+  public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+    int width = bm.getWidth();
+    int height = bm.getHeight();
+    float scaleWidth = ((float) newWidth) / width;
+    float scaleHeight = ((float) newHeight) / height;
+    // CREATE A MATRIX FOR THE MANIPULATION
+    Matrix matrix = new Matrix();
+    // RESIZE THE BIT MAP
+    matrix.postScale(scaleWidth, scaleHeight);
+
+    // "RECREATE" THE NEW BITMAP
+    Bitmap resizedBitmap = Bitmap.createBitmap(
+        bm, 0, 0, width, height, matrix, false);
+    // bm.recycle();
+    return resizedBitmap;
+  }
+
+  public SurfaceHolder getSurfaceHolder() {
+    return holder;
+  }
+
+  public Bitmap getBitmap() {
+    return bitmap;
   }
 
   @Override
@@ -69,7 +107,7 @@ public class CanvasView extends SurfaceView implements Callback {
     paint.setStyle(Paint.Style.STROKE);
     paint.setStrokeCap(Paint.Cap.ROUND);
     paint.setAntiAlias(true);
-    paint.setStrokeWidth(1.5f);
+    paint.setStrokeWidth(50f);
   }
 
   public void clear() {
@@ -89,7 +127,7 @@ public class CanvasView extends SurfaceView implements Callback {
 
   private void drawLine(Path path) {
     Canvas canvas = holder.lockCanvas();
-    canvas.scale(scale, scale);
+    // canvas.scale(scale, scale);
     canvas.drawColor(0, PorterDuff.Mode.CLEAR);
     canvas.drawBitmap(bitmap, 0, 0, null);
     canvas.drawPath(path, paint);
@@ -132,7 +170,7 @@ public class CanvasView extends SurfaceView implements Callback {
     path.lineTo(x, y);
     canvas.drawPath(path, paint);
     Canvas canvas = holder.lockCanvas();
-    canvas.scale(scale, scale);
+    // canvas.scale(scale, scale);
     canvas.drawColor(0, PorterDuff.Mode.CLEAR);
     canvas.drawBitmap(bitmap, 0, 0, null);
     holder.unlockCanvasAndPost(canvas);

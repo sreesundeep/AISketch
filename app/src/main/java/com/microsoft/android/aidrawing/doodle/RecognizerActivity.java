@@ -56,7 +56,8 @@ public class RecognizerActivity extends Activity {
       @Override
       public void onClick(View v) {
         // Fill input pixels.
-        int pixels[] = canvas.getPixels();
+        CanvasView canvasView = new CanvasView(canvas.getContext(), IMAGE_WIDTH, canvas.getBitmap());
+        int pixels[] = canvasView.getPixels();
         assert(pixels.length == IMAGE_PIXELS);
         for(int b = 0; b < BATCH; ++b){
           for(int h = 0; h < IMAGE_HEIGHT; ++h){
